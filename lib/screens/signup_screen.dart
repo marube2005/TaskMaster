@@ -26,6 +26,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
+ @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,10 +41,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            TextField(controller: emailController, decoration: InputDecoration(labelText: "Email")),
+            TextField(controller: emailController,  keyboardType: TextInputType.emailAddress, decoration: InputDecoration(labelText: "Email")),
             TextField(controller: passwordController, decoration: InputDecoration(labelText: "Password"), obscureText: true),
             SizedBox(height: 20),
             ElevatedButton(onPressed: registerUser, child: Text("Sign Up")),
+
+            TextButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/login'); // Navigate to login if already have an account
+              },
+              child: Text("Already have an account? Login"),
+            ),
           ],
         ),
       ),

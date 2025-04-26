@@ -6,14 +6,14 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.deepPurple.shade50,
+      backgroundColor: const Color.fromARGB(255, 148, 96, 226),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32.0),
+          padding: const EdgeInsets.all(15.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SvgPicture.asset("assets/acccept_tasks.svg", width:150, height:150),
+              SvgPicture.asset("assets/accept_tasks.svg", width:100, height:100),
               Text("TaskMaster",
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
               SizedBox(height: 20),
