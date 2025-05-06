@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
         '/splash': (_) => SplashScreen(),
         '/login': (_) => LoginScreen(),
         '/signup': (_) => SignUpScreen(),
-        '/home': (_) => HomeScreen(), // main app screen after login
+        '/home': (_) => HomePage(), // main app screen after login
       },
     );
   }
