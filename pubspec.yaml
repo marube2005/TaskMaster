@@ -21,6 +21,7 @@ dependencies:
   text_to_speech: ^0.2.3
   deepgram_speech_to_text: ^3.0.3
   flutter_svg: ^2.0.17
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
