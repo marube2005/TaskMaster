@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:myapp/widgets/bottom_navbar.dart'; // Ensure your widget is named correctly
 import 'package:myapp/widgets/custom_input.dart'; // Ensure your widget is named correctly
+import 'package:myapp/widgets/add_task_dialog.dart'; // Ensure your widget is named correctly
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:myapp/services/auth_services.dart'; // Adjust this path
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,33 +11,52 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
 
   void loginUser() async {
-    try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+    String? result = await _authService.loginWithEmail(
+      emailController.text.trim(),
+      passwordController.text.trim(),
+    );
+
+    if (result == null) {
       Navigator.pushReplacementNamed(context, '/home');
-    } catch (e) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login Failed: ${e.toString()}")),
+        SnackBar(content: Text("Login Failed: $result")),
       );
     }
   }
 
   @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Login")),
+      appBar: AppBar(title: const Text("Login")),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            TextField(controller: emailController, decoration: InputDecoration(labelText: "Email")),
-            TextField(controller: passwordController, decoration: InputDecoration(labelText: "Password"), obscureText: true),
-            SizedBox(height: 20),
-            ElevatedButton(onPressed: loginUser, child: Text("Login")),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(labelText: "Email"),
+            ),
+            TextField(
+              controller: passwordController,
+              decoration: const InputDecoration(labelText: "Password"),
+              obscureText: true,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: loginUser,
+              child: const Text("Login"),
+            ),
           ],
         ),
       ),
