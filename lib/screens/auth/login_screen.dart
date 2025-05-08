@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/services/auth_services.dart'; // Adjust this path
+import 'package:myapp/app.dart';
+//import 'package:myapp/services/auth_service.dart';
+//import 'package:myapp/navigation_service.dart';
+import 'package:myapp/services/auth_services.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _LoginScreenState createState() => _LoginScreenState();
 }
 
@@ -20,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (result == null) {
-      Navigator.pushReplacementNamed(context, '/home');
+      NavigationService.replaceWithMain(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Login Failed: $result")),
@@ -56,6 +60,12 @@ class _LoginScreenState extends State<LoginScreen> {
             ElevatedButton(
               onPressed: loginUser,
               child: const Text("Login"),
+            ),
+            TextButton(
+              onPressed: () {
+                NavigationService.navigateToSignUp(context);
+              },
+              child: const Text("Don't have an account? Sign Up"),
             ),
           ],
         ),

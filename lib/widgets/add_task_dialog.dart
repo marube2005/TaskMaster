@@ -24,15 +24,13 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
     try {
       await _firestoreService.addTask(uid, _controller.text.trim());
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Task added successfully!')),
-      );
-
-      Navigator.of(context).pop();
+      if (mounted) {
+        Navigator.of(context).pop('success');
+      }
     } catch (_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to add task. Please try again.')),
-      );
+      if (mounted) {
+        Navigator.of(context).pop('error');
+      }
       setState(() => _isLoading = false);
     }
   }

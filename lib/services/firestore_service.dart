@@ -3,34 +3,63 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Add a task for a specific user
-  Future<void> addTask(String uid, String title) async {
-    await _db.collection('tasks').doc(uid).collection('userTasks').add({
-      'title': title,
-      'createdAt': FieldValue.serverTimestamp(),
-      'completed': false,
-    });
-  }
-
-  // Get task stream for user
+  // Method to get tasks stream
   Stream<QuerySnapshot> getTasksStream(String uid) {
-    return _db
-      .collection('tasks')
-      .doc(uid)
-      .collection('userTasks')
-      .orderBy('createdAt', descending: true)
-      .snapshots();
+    return _db.collection('users').doc(uid).collection('tasks').snapshots();
   }
 
-  // Mark task complete/incomplete
-  Future<void> toggleTaskComplete(String uid, String taskId, bool currentStatus) async {
-    await _db.collection('tasks').doc(uid).collection('userTasks').doc(taskId).update({
-      'completed': !currentStatus,
-    });
+  // Method to add a task
+  Future<void> addTask(String uid, String title) async {
+    try {
+      await _db.collection('users').doc(uid).collection('tasks').add({
+        'title': title,
+        'completed': false,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Error adding task: $e');
+    }
   }
 
-  // Delete task
+  // Method to toggle task completion status
+  Future<void> toggleTaskComplete(String uid, String taskId, bool completed) async {
+    try {
+      await _db
+          .collection('users')
+          .doc(uid)
+          .collection('tasks')
+          .doc(taskId)
+          .update({'completed': completed});
+    } catch (e) {
+      throw Exception('Error toggling task completion: $e');
+    }
+  }
+
+  // Method to delete a task
   Future<void> deleteTask(String uid, String taskId) async {
-    await _db.collection('tasks').doc(uid).collection('userTasks').doc(taskId).delete();
+    try {
+      await _db
+          .collection('users')
+          .doc(uid)
+          .collection('tasks')
+          .doc(taskId)
+          .delete();
+    } catch (e) {
+      throw Exception('Error deleting task: $e');
+    }
+  }
+
+  // **New Method to update task title**
+  Future<void> updateTaskTitle(String uid, String taskId, String newTitle) async {
+    try {
+      await _db
+          .collection('users')
+          .doc(uid)
+          .collection('tasks')
+          .doc(taskId)
+          .update({'title': newTitle});
+    } catch (e) {
+      throw Exception('Error updating task title: $e');
+    }
   }
 }

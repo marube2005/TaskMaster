@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+// Screens
 import 'package:myapp/screens/splash/splash_screen.dart';
 import 'package:myapp/screens/auth/login_screen.dart';
 import 'package:myapp/screens/auth/signup_screen.dart';
@@ -8,6 +10,8 @@ import 'package:myapp/screens/tasks/tasks_screen.dart';
 import 'package:myapp/screens/chatbot/chatbot_screen.dart';
 import 'package:myapp/screens/settings/settings_screen.dart';
 import 'package:myapp/screens/insights/insights.dart';
+
+// Widgets
 import 'package:myapp/widgets/bottom_navbar.dart';
 
 void main() {
@@ -52,30 +56,13 @@ class AppRoutes {
   static const String login = '/login';
   static const String signup = '/signup';
   static const String main = '/main';
-  static const String home = '/home'; // Changed from '/' to '/home' to match login_screen.dart
-  static const String tasks = '/tasks';
-  static const String chatbot = '/chatbot';
-  static const String insights = '/insights';
-  static const String settings = '/settings';
 
   static final Map<String, WidgetBuilder> routes = {
     splash: (_) => const SplashScreen(),
     login: (_) => const LoginScreen(),
     signup: (_) => const SignUpScreen(),
-    home: (_) => const HomePage(),
-    tasks: (_) =>  TasksPage(),
-    chatbot: (_) => ProfilePage(),
-    insights: (_) => const InsightPage(),
-    settings: (_) => SettingsPage(),
+    main: (_) => const MainScreen(),
   };
-
-  static const List<String> bottomNavRoutes = [
-    home,
-    tasks,
-    chatbot,
-    insights,
-    settings,
-  ];
 }
 
 class NavigationService {
@@ -87,6 +74,10 @@ class NavigationService {
     Navigator.of(context).pushReplacementNamed(routeName);
   }
 
+  static void replaceWithMain(BuildContext context) {
+  pushAndRemoveUntil(context, AppRoutes.main);
+}
+
   static void pushAndRemoveUntil(BuildContext context, String routeName) {
     Navigator.of(context).pushNamedAndRemoveUntil(
       routeName,
@@ -96,16 +87,6 @@ class NavigationService {
 
   static void pop(BuildContext context) {
     Navigator.of(context).pop();
-  }
-
-  static void navigateToBottomNavPage(BuildContext context, int index) {
-    if (index >= 0 && index < AppRoutes.bottomNavRoutes.length) {
-      pushReplacement(context, AppRoutes.bottomNavRoutes[index]);
-    }
-  }
-
-  static void navigateToSplash(BuildContext context) {
-    push(context, AppRoutes.splash);
   }
 
   static void navigateToLogin(BuildContext context) {
@@ -119,34 +100,6 @@ class NavigationService {
   static void navigateToMain(BuildContext context) {
     pushAndRemoveUntil(context, AppRoutes.main);
   }
-
-  static void navigateToHome(BuildContext context) {
-    pushReplacement(context, AppRoutes.home);
-  }
-
-  static void navigateToTasks(BuildContext context) {
-    pushReplacement(context, AppRoutes.tasks);
-  }
-
-  static void navigateToChatbot(BuildContext context) {
-    pushReplacement(context, AppRoutes.chatbot);
-  }
-
-  static void navigateToInsights(BuildContext context) {
-    pushReplacement(context, AppRoutes.insights);
-  }
-
-  static void navigateToSettings(BuildContext context) {
-    pushReplacement(context, AppRoutes.settings);
-  }
-
-  static void replaceWithMain(BuildContext context) {
-    pushAndRemoveUntil(context, AppRoutes.main);
-  }
-
-  static void replaceWithLogin(BuildContext context) {
-    pushAndRemoveUntil(context, AppRoutes.login);
-  }
 }
 
 class MainScreen extends StatefulWidget {
@@ -159,34 +112,26 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      NavigationService.navigateToHome(context);
-    });
-  }
+  final List<Widget> _pages = [
+    const HomePage(),
+    TasksPage(),
+    ProfilePage(),
+    const InsightPage(),
+    SettingsPage(),
+  ];
 
   void _onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
-      NavigationService.navigateToBottomNavPage(context, index);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Navigator(
-        key: GlobalKey<NavigatorState>(),
-        initialRoute: AppRoutes.home,
-        onGenerateRoute: (settings) {
-          WidgetBuilder? builder = AppRoutes.routes[settings.name];
-          if (builder != null) {
-            return MaterialPageRoute(builder: builder, settings: settings);
-          }
-          return null;
-        },
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages,
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,
