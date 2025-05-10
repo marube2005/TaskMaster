@@ -5,7 +5,15 @@ class FirestoreService {
 
   // Method to get tasks stream
   Stream<QuerySnapshot> getTasksStream(String uid) {
-    return _db.collection('users').doc(uid).collection('tasks').snapshots();
+    return _db.collection('users').doc(uid).collection('tasks').orderBy('createdAt', descending: true).snapshots();
+  }
+
+   Stream<QuerySnapshot> getHabitsStream(String uid) {
+    return _db
+        .collection('users')
+        .doc(uid)
+        .collection('habits')
+        .snapshots();
   }
 
   // Method to add a task
@@ -63,3 +71,4 @@ class FirestoreService {
     }
   }
 }
+
