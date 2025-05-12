@@ -116,7 +116,7 @@ class _MainScreenState extends State<MainScreen> {
     const HomePage(),
     TasksPage(),
     ProfilePage(),
-    const InsightPage(),
+    const InsightsPage(),
     SettingsPage(),
   ];
 

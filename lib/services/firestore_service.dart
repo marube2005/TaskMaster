@@ -5,15 +5,16 @@ class FirestoreService {
 
   // Method to get tasks stream
   Stream<QuerySnapshot> getTasksStream(String uid) {
-    return _db.collection('users').doc(uid).collection('tasks').orderBy('createdAt', descending: true).snapshots();
-  }
-
-   Stream<QuerySnapshot> getHabitsStream(String uid) {
     return _db
         .collection('users')
         .doc(uid)
-        .collection('habits')
+        .collection('tasks')
+        .orderBy('createdAt', descending: true)
         .snapshots();
+  }
+
+  Stream<QuerySnapshot> getHabitsStream(String uid) {
+    return _db.collection('users').doc(uid).collection('habits').snapshots();
   }
 
   // Method to add a task
@@ -30,7 +31,11 @@ class FirestoreService {
   }
 
   // Method to toggle task completion status
-  Future<void> toggleTaskComplete(String uid, String taskId, bool completed) async {
+  Future<void> toggleTaskComplete(
+    String uid,
+    String taskId,
+    bool completed,
+  ) async {
     try {
       await _db
           .collection('users')
@@ -41,6 +46,40 @@ class FirestoreService {
     } catch (e) {
       throw Exception('Error toggling task completion: $e');
     }
+  }
+
+  // Add a goal for a user
+  Future<void> addGoal(String uid, Map<String, dynamic> goalData) async {
+    await _db.collection('users').doc(uid).collection('goals').add(goalData);
+  }
+
+  // Get goals stream for a user
+  Stream<QuerySnapshot> getGoalsStream(String uid) {
+    return _db.collection('users').doc(uid).collection('goals').snapshots();
+  }
+
+  // Update a goal for a user
+  Future<void> updateGoal(
+    String uid,
+    String goalId,
+    Map<String, dynamic> goalData,
+  ) async {
+    await _db
+        .collection('users')
+        .doc(uid)
+        .collection('goals')
+        .doc(goalId)
+        .update(goalData);
+  }
+
+  // Delete a goal for a user
+  Future<void> deleteGoal(String uid, String goalId) async {
+    await _db
+        .collection('users')
+        .doc(uid)
+        .collection('goals')
+        .doc(goalId)
+        .delete();
   }
 
   // Method to delete a task
@@ -58,7 +97,11 @@ class FirestoreService {
   }
 
   // **New Method to update task title**
-  Future<void> updateTaskTitle(String uid, String taskId, String newTitle) async {
+  Future<void> updateTaskTitle(
+    String uid,
+    String taskId,
+    String newTitle,
+  ) async {
     try {
       await _db
           .collection('users')
@@ -71,4 +114,3 @@ class FirestoreService {
     }
   }
 }
-

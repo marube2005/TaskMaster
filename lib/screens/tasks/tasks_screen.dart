@@ -255,10 +255,12 @@ class _TasksPageState extends State<TasksPage> {
 
       if (newTitle != null && newTitle.trim().isNotEmpty && newTitle.trim() != title) {
         await _firestoreService.updateTaskTitle(uid, taskId, newTitle.trim());
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Task updated')));
       }
     } else if (action == 'delete' || action == 'archive') {
       await _firestoreService.deleteTask(uid, taskId);
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Task "$title" ${action == 'delete' ? 'deleted' : 'archived'}'),
@@ -296,6 +298,7 @@ class _TasksPageState extends State<TasksPage> {
 
     if (action != null) {
       await _firestoreService.deleteTask(uid, taskId);
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Task "$title" ${action == 'delete' ? 'deleted' : 'archived'}'),
