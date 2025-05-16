@@ -5,7 +5,7 @@ import 'package:myapp/services/firestore_service.dart';
 import 'package:myapp/widgets/add_task_dialog.dart';
 
 class TasksPage extends StatefulWidget {
-  const TasksPage({Key? key}) : super(key: key);
+  const TasksPage({super.key});
 
   @override
   State<TasksPage> createState() => _TasksPageState();
@@ -81,7 +81,7 @@ class _TasksPageState extends State<TasksPage> {
                     else
                       ...filteredTasks
                           .map((doc) => _buildTaskTile(context, uid, doc))
-                          .toList(),
+                          ,
                   ],
                 ),
               );

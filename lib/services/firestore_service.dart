@@ -5,12 +5,7 @@ class FirestoreService {
 
   // Method to get tasks stream
   Stream<QuerySnapshot> getTasksStream(String uid) {
-    return _db
-        .collection('users')
-        .doc(uid)
-        .collection('tasks')
-        .orderBy('createdAt', descending: true)
-        .snapshots();
+    return _db.collection('users').doc(uid).collection('tasks').orderBy('createdAt', descending: true).snapshots();
   }
 
   Stream<QuerySnapshot> getHabitsStream(String uid) {
@@ -37,12 +32,7 @@ class FirestoreService {
     bool completed,
   ) async {
     try {
-      await _db
-          .collection('users')
-          .doc(uid)
-          .collection('tasks')
-          .doc(taskId)
-          .update({'completed': completed});
+      await _db.collection('users').doc(uid).collection('tasks').doc(taskId).update({'completed': completed});
     } catch (e) {
       throw Exception('Error toggling task completion: $e');
     }
@@ -64,33 +54,19 @@ class FirestoreService {
     String goalId,
     Map<String, dynamic> goalData,
   ) async {
-    await _db
-        .collection('users')
-        .doc(uid)
-        .collection('goals')
-        .doc(goalId)
-        .update(goalData);
+    await _db.collection('users').doc(uid).collection('goals').doc(goalId).update(goalData);
   }
 
   // Delete a goal for a user
   Future<void> deleteGoal(String uid, String goalId) async {
-    await _db
-        .collection('users')
-        .doc(uid)
-        .collection('goals')
-        .doc(goalId)
-        .delete();
+    await _db.collection('users').doc(uid).collection('goals').doc(goalId).delete();
   }
+
 
   // Method to delete a task
   Future<void> deleteTask(String uid, String taskId) async {
     try {
-      await _db
-          .collection('users')
-          .doc(uid)
-          .collection('tasks')
-          .doc(taskId)
-          .delete();
+      await _db.collection('users').doc(uid).collection('tasks').doc(taskId).delete();
     } catch (e) {
       throw Exception('Error deleting task: $e');
     }
@@ -103,14 +79,41 @@ class FirestoreService {
     String newTitle,
   ) async {
     try {
-      await _db
-          .collection('users')
-          .doc(uid)
-          .collection('tasks')
-          .doc(taskId)
-          .update({'title': newTitle});
+      await _db.collection('users').doc(uid).collection('tasks').doc(taskId).update({'title': newTitle});
     } catch (e) {
       throw Exception('Error updating task title: $e');
     }
+  }
+  
+  // User Preferences Methods
+  Future<Map<String, dynamic>?> getUserPreferences(String uid) async {
+    final doc = await _db.collection('users').doc(uid).get();
+    return doc.data()?['preferences'] as Map<String, dynamic>?;
+  }
+
+  Future<void> updateUserPreferences(String uid, Map<String, dynamic> preferences) async {
+    await _db.collection('users').doc(uid)
+        .set(
+          {'preferences': preferences},
+          SetOptions(merge: true),
+        );
+  }
+
+  Future<void> addUserInterest(String uid, String interest) async {
+    final currentPrefs = await getUserPreferences(uid) ?? {};
+    final interests = List<String>.from(currentPrefs['interests'] ?? [])..add(interest);
+    await updateUserPreferences(uid, {
+      ...currentPrefs,
+      'interests': interests,
+    });
+  }
+
+  Future<void> removeUserInterest(String uid, String interest) async {
+    final currentPrefs = await getUserPreferences(uid) ?? {};
+    final interests = List<String>.from(currentPrefs['interests'] ?? [])..remove(interest);
+    await updateUserPreferences(uid, {
+      ...currentPrefs,
+      'interests': interests,
+    });
   }
 }

@@ -11,7 +11,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:async/async.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({Key? key}) : super(key: key);
+  const ProfilePage({super.key});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -24,7 +24,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _textController = TextEditingController();
   bool _isListening = false;
   String _recognizedText = '';
-  List<Map<String, dynamic>> _chatMessages = [];
+  final List<Map<String, dynamic>> _chatMessages = [];
   bool _isGoalPlanningMode = false; // Track goal planning mode
   String? _currentGoal; // Store the user's goal for refinement
   final List<String> _motivationalQuotes = [

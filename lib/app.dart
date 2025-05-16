@@ -117,7 +117,7 @@ class _MainScreenState extends State<MainScreen> {
     TasksPage(),
     ProfilePage(),
     const InsightsPage(),
-    SettingsPage(),
+    SettingsScreen(),
   ];
 
   void _onTabTapped(int index) {

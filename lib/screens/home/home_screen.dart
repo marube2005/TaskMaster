@@ -5,7 +5,7 @@ import 'package:myapp/services/firestore_service.dart';
 import 'package:myapp/widgets/add_task_dialog.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -93,7 +93,7 @@ class _HomePageState extends State<HomePage> {
                     if (todayTasks.isEmpty)
                       const Center(child: Text("No tasks for today. Add some to get started!"))
                     else
-                      ...todayTasks.map((doc) => _buildTaskTile(context, uid, doc)).toList(),
+                      ...todayTasks.map((doc) => _buildTaskTile(context, uid, doc)),
                   ],
                 ),
               );
@@ -103,8 +103,8 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddTaskDialog(context, uid),
-        child: const Icon(Icons.add),
         tooltip: 'Add Task',
+        child: const Icon(Icons.add),
       ),
     );
   }
