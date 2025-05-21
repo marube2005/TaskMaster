@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/app.dart';
-//import 'package:myapp/navigation_services.dart';
 import 'package:myapp/services/auth_services.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -16,22 +14,76 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final passwordController = TextEditingController();
   final usernameController = TextEditingController();
   final AuthService _authService = AuthService();
+  bool _isLoading = false;
 
-  void registerUser() async {
+  // Validate inputs before registration
+  bool _validateInputs() {
+    if (usernameController.text.trim().isEmpty) {
+      _showSnackBar('Please enter a username');
+      return false;
+    }
+    if (emailController.text.trim().isEmpty || !emailController.text.contains('@')) {
+      _showSnackBar('Please enter a valid email');
+      return false;
+    }
+    if (passwordController.text.trim().length < 6) {
+      _showSnackBar('Password must be at least 6 characters');
+      return false;
+    }
+    return true;
+  }
+
+  // Show SnackBar for user feedback
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  // Register user with email and password
+  void _registerUser() async {
+    if (!_validateInputs()) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
     String? result = await _authService.registerWithEmail(
       emailController.text.trim(),
       passwordController.text.trim(),
       usernameController.text.trim(),
     );
 
+    setState(() {
+      _isLoading = false;
+    });
+
     if (result == null) {
-      // ignore: use_build_context_synchronously
-      NavigationService.replaceWithMain(context);
+      _showSnackBar('Registration successful! Please check your email to verify your account.');
+      // Navigate to login screen after successful registration
+      Navigator.pushReplacementNamed(context, '/login');
     } else {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Sign Up Failed: $result")),
-      );
+      _showSnackBar('Sign Up Failed: $result');
+    }
+  }
+
+  // Sign in with Google
+  void _signInWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    String? result = await _authService.signInWithGoogle();
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result == null) {
+      // Navigate to main screen after successful Google Sign-In
+      Navigator.pushReplacementNamed(context, '/main');
+    } else {
+      _showSnackBar('Google Sign-In Failed: $result');
     }
   }
 
@@ -50,29 +102,63 @@ class _SignUpScreenState extends State<SignUpScreen> {
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextField(
               controller: usernameController,
-              decoration: const InputDecoration(labelText: "Username"),
+              decoration: const InputDecoration(
+                labelText: "Username",
+                border: OutlineInputBorder(),
+              ),
             ),
+            const SizedBox(height: 16),
             TextField(
               controller: emailController,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: "Email"),
+              decoration: const InputDecoration(
+                labelText: "Email",
+                border: OutlineInputBorder(),
+              ),
             ),
+            const SizedBox(height: 16),
             TextField(
               controller: passwordController,
-              decoration: const InputDecoration(labelText: "Password"),
+              decoration: const InputDecoration(
+                labelText: "Password",
+                border: OutlineInputBorder(),
+              ),
               obscureText: true,
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: registerUser,
-              child: const Text("Sign Up"),
-            ),
+            _isLoading
+                ? const CircularProgressIndicator()
+                : Column(
+                    children: [
+                      ElevatedButton(
+                        onPressed: _registerUser,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 50),
+                        ),
+                        child: const Text("Sign Up"),
+                      ),
+                      const SizedBox(height: 10),
+                      ElevatedButton.icon(
+                        onPressed: _signInWithGoogle,
+                        icon: const Icon(Icons.g_mobiledata),
+                        label: const Text("Sign Up with Google"),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 50),
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.black,
+                          side: const BorderSide(color: Colors.grey),
+                        ),
+                      ),
+                    ],
+                  ),
+            const SizedBox(height: 20),
             TextButton(
               onPressed: () {
-                NavigationService.navigateToLogin(context);
+                Navigator.pushNamed(context, '/login');
               },
               child: const Text("Already have an account? Login"),
             ),
