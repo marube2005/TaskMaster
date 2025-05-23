@@ -1,10 +1,15 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+// ignore: unused_import
+import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 //import 'package:myapp/services/firestore_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:math';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -129,13 +134,18 @@ class AuthService {
     }
   }
 
-  // Sign in with Google
-  Future<String?> signInWithGoogle() async {
+  // Try silent sign-in first (for returning users)
+  Future<GoogleSignInAccount?> signInSilently() async {
     try {
-      // Trigger Google Sign-In flow
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return 'Sign-in canceled';
+      return await _googleSignIn.signInSilently();
+    } catch (e) {
+      return null;
+    }
+  }
 
+  // Process Google Sign-In account after authentication
+  Future<String?> processGoogleUser(GoogleSignInAccount googleUser) async {
+    try {
       // Verify email domain
       if (!_isGoogleEmail(googleUser.email)) {
         await _googleSignIn.signOut();
@@ -157,6 +167,25 @@ class AuthService {
       await _initializeUserData(user);
 
       return null; // Success
+    } catch (e) {
+      return 'Google Sign-In failed: $e';
+    }
+  }
+
+  // Sign in with Google - Legacy method for non-web platforms
+  Future<String?> signInWithGoogle() async {
+    try {
+      if (kIsWeb) {
+        // For web, this should not be called directly
+        // Instead, use the renderButton in the UI and processGoogleUser
+        return 'For web platforms, use the Google Sign-In button instead';
+      } else {
+        // For mobile platforms, we can still use the traditional flow
+        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+        if (googleUser == null) return 'Sign-in canceled';
+        
+        return processGoogleUser(googleUser);
+      }
     } catch (e) {
       return 'Google Sign-In failed: $e';
     }

@@ -1,4 +1,8 @@
+// ignore_for_file: unused_import
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 import 'package:myapp/services/auth_services.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -22,7 +26,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _showSnackBar('Please enter a username');
       return false;
     }
-    if (emailController.text.trim().isEmpty || !emailController.text.contains('@')) {
+    final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegExp.hasMatch(emailController.text.trim())) {
       _showSnackBar('Please enter a valid email');
       return false;
     }
@@ -35,9 +40,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   // Show SnackBar for user feedback
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   // Register user with email and password
@@ -59,7 +64,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     if (result == null) {
-      _showSnackBar('Registration successful! Please check your email to verify your account.');
+      _showSnackBar(
+        'Registration successful! Please check your email to verify your account.',
+      );
       // Navigate to login screen after successful registration
       Navigator.pushReplacementNamed(context, '/login');
     } else {
@@ -67,13 +74,50 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  // Sign in with Google
-  void _signInWithGoogle() async {
+  // Handle Google Sign-In
+  void _handleGoogleSignIn() async {
+    // For mobile platforms, use the legacy method
+    if (!kIsWeb) {
+      _signInWithGoogleLegacy();
+      return;
+    }
+
+    // For web platforms, the sign-in is handled by the renderButton
+    // This method should not be called directly on web
+  }
+
+  // Legacy Google Sign-In for mobile platforms
+  void _signInWithGoogleLegacy() async {
     setState(() {
       _isLoading = true;
     });
 
     String? result = await _authService.signInWithGoogle();
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result == null) {
+      // Navigate to main screen after successful Google Sign-In
+      Navigator.pushReplacementNamed(context, '/main');
+    } else {
+      _showSnackBar('Google Sign-In Failed: $result');
+    }
+  }
+
+  // Process Google Sign-In result
+  void _processGoogleSignIn(GoogleSignInAccount? googleUser) async {
+    if (googleUser == null) {
+      _showSnackBar('Sign-In canceled');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    String? result = await _authService.processGoogleUser(googleUser);
 
     setState(() {
       _isLoading = false;
@@ -133,17 +177,44 @@ class _SignUpScreenState extends State<SignUpScreen> {
             _isLoading
                 ? const CircularProgressIndicator()
                 : Column(
-                    children: [
-                      ElevatedButton(
-                        onPressed: _registerUser,
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
-                        ),
-                        child: const Text("Sign Up"),
+                  children: [
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : _registerUser,
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 50),
                       ),
-                      const SizedBox(height: 10),
+                      child: const Text("Sign Up"),
+                    ),
+                    const SizedBox(height: 10),
+                    if (kIsWeb)
+                      // Use renderButton for web platforms
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.g_mobiledata),
+                          label: const Text("Sign Up with Google"),
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 50),
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
+                            side: const BorderSide(color: Colors.grey),
+                          ),
+                            onPressed: () async {
+                            try {
+                              // Try silent sign-in first
+                              final user = await _authService.signInSilently();
+                              _processGoogleSignIn(user);
+                            } catch (error) {
+                              _showSnackBar('Error during sign in: $error');
+                            }
+                          },
+                        ),
+                      )
+                    else
+                      // Use custom button for mobile platforms
                       ElevatedButton.icon(
-                        onPressed: _signInWithGoogle,
+                        onPressed: _handleGoogleSignIn,
                         icon: const Icon(Icons.g_mobiledata),
                         label: const Text("Sign Up with Google"),
                         style: ElevatedButton.styleFrom(
@@ -153,8 +224,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           side: const BorderSide(color: Colors.grey),
                         ),
                       ),
-                    ],
-                  ),
+                  ],
+                ),
             const SizedBox(height: 20),
             TextButton(
               onPressed: () {
