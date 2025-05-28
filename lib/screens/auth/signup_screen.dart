@@ -200,10 +200,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             foregroundColor: Colors.black,
                             side: const BorderSide(color: Colors.grey),
                           ),
-                            onPressed: () async {
+                          onPressed: () async {
                             try {
-                              // Try silent sign-in first
-                              final user = await _authService.signInSilently();
+                              final GoogleSignIn _googleSignIn = GoogleSignIn(
+                                clientId:
+                                    '1042695203771-jtpf99vrp097uoeuj7o9q590uv3stfke.googleusercontent.com',
+                                scopes: [
+                                  'https://www.googleapis.com/auth/userinfo.profile',
+                                  'https://www.googleapis.com/auth/userinfo.email',
+                                ],
+                              );
+                              final isSignedIn =
+                                  await _googleSignIn.isSignedIn();
+
+                              GoogleSignInAccount? user;
+                              if (isSignedIn) {
+                                user =
+                                    _googleSignIn.currentUser ??
+                                    await _googleSignIn.signInSilently();
+                              } else {
+                                user = await _googleSignIn.signIn();
+                              }
+
                               _processGoogleSignIn(user);
                             } catch (error) {
                               _showSnackBar('Error during sign in: $error');

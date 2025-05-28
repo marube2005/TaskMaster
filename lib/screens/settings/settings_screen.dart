@@ -163,7 +163,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         android: AndroidNotificationDetails(
           '${type}_channel',
           '${type.capitalize} Reminders',
-          channelDescription: 'Notification for ${type} time reminder',
+          channelDescription: 'Notification for $type time reminder',
           importance: Importance.high,
           priority: Priority.high,
         ),

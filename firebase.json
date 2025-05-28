@@ -20,6 +20,14 @@
       }
     }
   },
+  "hosting": {
+    "rewrites": [
+      {
+        "source": "/sendVerificationEmail",
+        "function": "sendVerificationEmail"
+      }
+    ]
+  },
   "functions": [
     {
       "source": "functions",

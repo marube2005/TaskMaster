@@ -135,13 +135,17 @@ class AuthService {
   }
 
   // Try silent sign-in first (for returning users)
-  Future<GoogleSignInAccount?> signInSilently() async {
-    try {
-      return await _googleSignIn.signInSilently();
-    } catch (e) {
-      return null;
-    }
+ Future<GoogleSignInAccount?> signInSilently() async {
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final isSignedIn = await _googleSignIn.isSignedIn();
+
+  if (isSignedIn) {
+    return _googleSignIn.currentUser ?? await _googleSignIn.signInSilently();
+  } else {
+    return await _googleSignIn.signIn();
   }
+}
+
 
   // Process Google Sign-In account after authentication
   Future<String?> processGoogleUser(GoogleSignInAccount googleUser) async {
