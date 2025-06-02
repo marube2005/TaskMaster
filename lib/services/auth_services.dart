@@ -37,7 +37,7 @@ class AuthService {
       // Call Firebase Function to send verification email
       final callable = 'sendVerificationEmail'; // Name of the Cloud Function
       final response = await http.post(
-        Uri.parse('https://us-central1-your-firebase-project-id.cloudfunctions.net/$callable'),
+        Uri.parse('https://us-central1-taskmaster-a103f.cloudfunctions.net/$callable'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'data': {
@@ -47,9 +47,12 @@ class AuthService {
           },
         }),
       );
-
+      
+     
+      
       if (response.statusCode != 200) {
-        throw Exception('Failed to send verification email');
+        return 'Failed to send verification email: ${response.body}';
+        
       }
 
       // Save user data to Firestore (unverified)
