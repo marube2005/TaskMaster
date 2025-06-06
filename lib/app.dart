@@ -10,6 +10,7 @@ import 'package:myapp/screens/tasks/tasks_screen.dart';
 import 'package:myapp/screens/chatbot/chatbot_screen.dart';
 import 'package:myapp/screens/settings/settings_screen.dart';
 import 'package:myapp/screens/insights/insights.dart';
+import 'package:myapp/screens/verify/verify_screen.dart';
 
 // Widgets
 import 'package:myapp/widgets/bottom_navbar.dart';
@@ -30,9 +31,9 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.deepPurple,
         textTheme: GoogleFonts.poppinsTextTheme(
           Theme.of(context).textTheme.apply(
-                bodyColor: Colors.black,
-                displayColor: Colors.black,
-              ),
+            bodyColor: Colors.black,
+            displayColor: Colors.black,
+          ),
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.deepPurple,
@@ -42,11 +43,13 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: AppRoutes.splash,
       routes: AppRoutes.routes,
-      onUnknownRoute: (settings) => MaterialPageRoute(
-        builder: (context) => const Scaffold(
-          body: Center(child: Text('Route not found')),
-        ),
-      ),
+      onUnknownRoute:
+          (settings) => MaterialPageRoute(
+            builder:
+                (context) => const Scaffold(
+                  body: Center(child: Text('Route not found')),
+                ),
+          ),
     );
   }
 }
@@ -56,12 +59,18 @@ class AppRoutes {
   static const String login = '/login';
   static const String signup = '/signup';
   static const String main = '/main';
+  static const String verifyEmail = '/verify-email';
 
   static final Map<String, WidgetBuilder> routes = {
     splash: (_) => const SplashScreen(),
     login: (_) => const LoginScreen(),
     signup: (_) => const SignUpScreen(),
     main: (_) => const MainScreen(),
+    verifyEmail: (context) {
+      final args =
+          ModalRoute.of(context)?.settings.arguments as Map<String, String>;
+      return VerifyEmailScreen(uid: args['uid']!, email: args['email']!);
+    },
   };
 }
 
@@ -75,14 +84,13 @@ class NavigationService {
   }
 
   static void replaceWithMain(BuildContext context) {
-  pushAndRemoveUntil(context, AppRoutes.main);
-}
+    pushAndRemoveUntil(context, AppRoutes.main);
+  }
 
   static void pushAndRemoveUntil(BuildContext context, String routeName) {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      routeName,
-      (Route<dynamic> route) => false,
-    );
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(routeName, (Route<dynamic> route) => false);
   }
 
   static void pop(BuildContext context) {
@@ -129,10 +137,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,
         onTap: _onTabTapped,

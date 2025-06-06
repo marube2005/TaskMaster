@@ -18,7 +18,11 @@ class AuthService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Sign up with email, password, and username
-  Future<String?> registerWithEmail(String email, String password, String username) async {
+  Future<String?> registerWithEmail(
+    String email,
+    String password,
+    String username,
+  ) async {
     try {
       // Create user with email and password
       UserCredential result = await _auth.createUserWithEmailAndPassword(
@@ -31,28 +35,26 @@ class AuthService {
       const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
       final random = Random();
       final token = String.fromCharCodes(
-        Iterable.generate(32, (_) => chars.codeUnitAt(random.nextInt(chars.length))),
+        Iterable.generate(
+          32,
+          (_) => chars.codeUnitAt(random.nextInt(chars.length)),
+        ),
       );
 
       // Call Firebase Function to send verification email
       final callable = 'sendVerificationEmail'; // Name of the Cloud Function
       final response = await http.post(
-        Uri.parse('https://us-central1-taskmaster-a103f.cloudfunctions.net/$callable'),
+        Uri.parse(
+          'https://us-central1-taskmaster-a103f.cloudfunctions.net/$callable',
+        ),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'data': {
-            'email': email,
-            'token': token,
-            'uid': user.uid,
-          },
+          'data': {'email': email, 'token': token, 'uid': user.uid},
         }),
       );
-      
-     
-      
+
       if (response.statusCode != 200) {
         return 'Failed to send verification email: ${response.body}';
-        
       }
 
       // Save user data to Firestore (unverified)
@@ -78,12 +80,13 @@ class AuthService {
   // Verify email token
   Future<String?> verifyEmailToken(String uid, String token) async {
     try {
-      final tokenDoc = await _firestore
-          .collection('users')
-          .doc(uid)
-          .collection('verification_tokens')
-          .doc(token)
-          .get();
+      final tokenDoc =
+          await _firestore
+              .collection('users')
+              .doc(uid)
+              .collection('verification_tokens')
+              .doc(token)
+              .get();
 
       if (!tokenDoc.exists) {
         return 'Invalid or expired token';
@@ -117,18 +120,7 @@ class AuthService {
   // Sign in with email and password
   Future<String?> loginWithEmail(String email, String password) async {
     try {
-      UserCredential result = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      final user = result.user!;
-      final userDoc = await _firestore.collection('users').doc(user.uid).get();
-      final isVerified = userDoc.exists && (userDoc.data()!['isVerified'] == true);
-
-      if (!isVerified) {
-        return 'Please verify your email before signing in.';
-      }
-
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
       return null; // Success
     } on FirebaseAuthException catch (e) {
       return e.message;
@@ -138,47 +130,58 @@ class AuthService {
   }
 
   // Try silent sign-in first (for returning users)
- Future<GoogleSignInAccount?> signInSilently() async {
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
-  final isSignedIn = await _googleSignIn.isSignedIn();
+  Future<GoogleSignInAccount?> signInSilently() async {
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    final isSignedIn = await googleSignIn.isSignedIn();
 
-  if (isSignedIn) {
-    return _googleSignIn.currentUser ?? await _googleSignIn.signInSilently();
-  } else {
-    return await _googleSignIn.signIn();
-  }
-}
-
-
-  // Process Google Sign-In account after authentication
-  Future<String?> processGoogleUser(GoogleSignInAccount googleUser) async {
-    try {
-      // Verify email domain
-      if (!_isGoogleEmail(googleUser.email)) {
-        await _googleSignIn.signOut();
-        return 'Only Google emails (@gmail.com or Google Workspace) are allowed.';
-      }
-
-      // Get Google authentication credentials
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      // Sign in to Firebase with Google credentials
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
-      final User user = userCredential.user!;
-
-      // Initialize user data in Firestore
-      await _initializeUserData(user);
-
-      return null; // Success
-    } catch (e) {
-      return 'Google Sign-In failed: $e';
+    if (isSignedIn) {
+      return googleSignIn.currentUser ?? await googleSignIn.signInSilently();
+    } else {
+      return await googleSignIn.signIn();
     }
   }
 
+  // Process Google Sign-In account after authentication
+  Future<String?> processGoogleUser(GoogleSignInAccount googleUser, {String? username}) async {
+  try {
+    if (!_isGoogleEmail(googleUser.email)) {
+      await _googleSignIn.signOut();
+      return 'Only Google emails (@gmail.com or Google Workspace) are allowed.';
+    }
+
+    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    final UserCredential userCredential = await _auth.signInWithCredential(credential);
+    final User user = userCredential.user!;
+
+    // Set displayName (fallback: username > googleUser.displayName > email prefix)
+    String displayName = username ?? googleUser.displayName ?? googleUser.email.split('@').first;
+    await user.updateDisplayName(displayName);
+
+    // Optionally store user data in Firestore if not exists
+    final userDocRef = _firestore.collection('users').doc(user.uid);
+    final userDoc = await userDocRef.get();
+
+    if (!userDoc.exists) {
+      await userDocRef.set({
+        'uid': user.uid,
+        'email': user.email,
+        'username': displayName, // Save the fallback display name as username
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
+
+    await _initializeUserData(user); // Custom function to preload additional data
+
+    return null; // Success
+  } catch (e) {
+    return 'Google Sign-In failed: $e';
+  }
+}
   // Sign in with Google - Legacy method for non-web platforms
   Future<String?> signInWithGoogle() async {
     try {
@@ -190,7 +193,7 @@ class AuthService {
         // For mobile platforms, we can still use the traditional flow
         final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
         if (googleUser == null) return 'Sign-in canceled';
-        
+
         return processGoogleUser(googleUser);
       }
     } catch (e) {
@@ -225,9 +228,9 @@ class AuthService {
       });
 
       // Add default habits (consistent with ProfilePage)
-     // await _firestoreService.addHabit(user.uid, 'Exercise', 'Daily');
+      // await _firestoreService.addHabit(user.uid, 'Exercise', 'Daily');
       // await _firestoreService.addHabit(user.uid, 'Read', 'Daily');
-     // await _firestoreService.addHabit(user.uid, 'Meditate', 'Daily');
+      // await _firestoreService.addHabit(user.uid, 'Meditate', 'Daily');
     }
   }
 

@@ -3,7 +3,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:myapp/services/auth_services.dart';
-
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:myapp/app.dart';
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
@@ -38,18 +39,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (!_validateInputs()) return;
 
     setState(() => _isLoading = true);
-    String? result = await _authService.registerWithEmail(
+    final userUid = await _authService.registerWithEmail(
       _emailController.text.trim(),
       _passwordController.text.trim(),
       _usernameController.text.trim(),
     );
     setState(() => _isLoading = false);
 
-    if (result == null) {
-      _showSnackBar('Registration successful! Please check your email to verify your account.');
-      Navigator.pushReplacementNamed(context, '/login');
+    if (userUid != null) {
+      // Send verification code from Firebase Function
+      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable('sendVerificationEmail');
+      await callable.call({
+        'email': _emailController.text.trim(),
+        'uid': userUid,
+      });
+
+      // 👇 Navigate to verification screen
+      Navigator.pushNamed(
+        context,
+        AppRoutes.verifyEmail,
+        arguments: {'uid': userUid, 'email': _emailController.text.trim()},
+      );
     } else {
-      _showSnackBar('Sign Up Failed: $result');
+      _showSnackBar('Registration failed. Please try again.');
     }
   }
 
